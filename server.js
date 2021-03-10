@@ -18,7 +18,7 @@ const db = new sqlite3.Database('./db/election.db', err => {
 });
 
 //SQL Commands
-//All candidates
+//Get All candidates
 app.get('/api/candidates', (req,res) => {
     const sql = `SELECT candidates.*, parties.name
                 AS party_name FROM candidates
@@ -39,7 +39,7 @@ app.get('/api/candidates', (req,res) => {
     });
 });
 
-//Single candidate
+//Get Single candidate
 app.get('/api/candidates/:id', (req,res) => {
     const sql = `SELECT candidates.*, parties.name
                 AS party_name FROM candidates
@@ -61,6 +61,42 @@ app.get('/api/candidates/:id', (req,res) => {
     });
 });
 
+//Get All Parties
+app.get('/api/parties', (req, res) => {
+    const sql = `SELECT * FROM parties`;
+    const params = [];
+
+    db.all(sql, params, (err, rows) => {
+        if (err) {
+            res.status(500).json({ error: err.message });
+            return;
+        }
+
+        res.json({
+            message: 'success',
+            data: rows
+        });
+    });
+});
+
+//Get Single Party
+app.get('/api/party/:id', (req, res) => {
+    const sql = `SELECT * FROM parties WHERE id = ?`;
+    const params = [req.params.id];
+
+    db.get(sql, params, (err, row) => {
+        if (err) {
+            res.status(400).json({ error: err.message });
+            return;
+        }
+
+        res.json({
+            message: 'success',
+            data: row
+        });
+    });
+});
+
 //Delete candidate
 app.delete('/api/candidate/:id', (req, res) => {
     const sql = `DELETE FROM candidates WHERE id = ?`;
@@ -76,6 +112,21 @@ app.delete('/api/candidate/:id', (req, res) => {
             message: 'successfully deleted',
             changes: this.changes
         });
+    });
+});
+
+//Delete Party
+app.delete('/api/party/:id', (req, res) => {
+    const sql = `DELETE FROM parties WHERE id = ?`;
+    const params = [req.params.id];
+
+    db.run(sql, params, function(err, result) {
+        if (err) {
+            res.status(400).json({ error: res.message });
+            return;
+        }
+
+        res.json({ message: 'successfully deleted', changes: this.changes });
     });
 });
 
@@ -102,6 +153,33 @@ app.post('/api/candidate', ({ body }, res) => {
           message: 'success',
           data: body,
           id: this.lastID
+        });
+    });
+});
+
+//Update Candidate
+app.put('/api/candidate/:id', (req, res) => {
+    const errors = inputCheck(req.body, 'party_id');
+
+    if (errors) {
+    res.status(400).json({ error: errors });
+    return;
+    }
+    
+    const sql = `UPDATE candidates SET party_id = ? 
+                 WHERE id = ?`;
+    const params = [req.body.party_id, req.params.id];
+  
+    db.run(sql, params, function(err, result) {
+        if (err) {
+            res.status(400).json({ error: err.message });
+            return;
+        }
+
+        res.json({
+            message: 'success',
+            data: req.body,
+            changes: this.changes
         });
     });
 });
