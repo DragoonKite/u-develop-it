@@ -40,7 +40,7 @@ app.get('/api/candidates', (req,res) => {
 });
 
 //Get Single candidate
-app.get('/api/candidates/:id', (req,res) => {
+app.get('/api/candidate/:id', (req,res) => {
     const sql = `SELECT candidates.*, parties.name
                 AS party_name FROM candidates
                 LEFT JOIN parties
@@ -165,7 +165,7 @@ app.put('/api/candidate/:id', (req, res) => {
     res.status(400).json({ error: errors });
     return;
     }
-    
+
     const sql = `UPDATE candidates SET party_id = ? 
                  WHERE id = ?`;
     const params = [req.body.party_id, req.params.id];
